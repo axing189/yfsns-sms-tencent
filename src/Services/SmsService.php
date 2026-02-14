@@ -59,40 +59,39 @@ class SmsService
         try {
             $this->validateConfig();
 
-            $timestamp = time();
-            $params = [
-                'SmsSdkAppId' => $this->config['sdk_app_id'],
-                'SignName' => $this->config['sign_name'],
-                'TemplateId' => $templateId,
-                'PhoneNumberSet' => [$phone],
-                'TemplateParamSet' => array_values($templateParams),
-            ];
+            $cred = new \TencentCloud\Common\Credential(
+                $this->config['secret_id'],
+                $this->config['secret_key']
+            );
 
-            $commonParams = [
-                'Action' => 'SendSms',
-                'Version' => '2021-01-11',
-                'Region' => $this->config['region_id'],
-                'Timestamp' => $timestamp,
-                'Nonce' => rand(10000, 99999),
-                'SecretId' => $this->config['secret_id'],
-            ];
+            $httpProfile = new \TencentCloud\Common\Profile\HttpProfile();
+            $httpProfile->setEndpoint('sms.tencentcloudapi.com');
 
-            $allParams = array_merge($commonParams, $params);
-            $signature = $this->generateSignature($allParams);
-            $allParams['Signature'] = $signature;
+            $clientProfile = new \TencentCloud\Common\Profile\ClientProfile();
+            $clientProfile->setHttpProfile($httpProfile);
 
-            $response = Http::timeout($this->config['timeout'])
-                ->post('https://sms.tencentcloudapi.com/', $allParams)
-                ->json();
+            $client = new \TencentCloud\Sms\V20210111\SmsClient(
+                $cred,
+                $this->config['region_id'],
+                $clientProfile
+            );
 
-            $response = $response ?: [];
-            $sendStatusSet = $response['Response']['SendStatusSet'][0] ?? [];
+            $req = new \TencentCloud\Sms\V20210111\Models\SendSmsRequest();
+            $req->setSmsSdkAppId($this->config['sdk_app_id']);
+            $req->setSignName($this->config['sign_name']);
+            $req->setTemplateId($templateId);
+            $req->setPhoneNumberSet([$phone]);
+            $req->setTemplateParamSet(array_values($templateParams));
+
+            $response = $client->SendSms($req);
+            $sendStatusSet = $response->getSendStatusSet();
+            $status = $sendStatusSet[0];
 
             return [
-                'success' => ($sendStatusSet['Code'] ?? '') === 'Ok',
-                'message' => $sendStatusSet['Message'] ?? '发送成功',
-                'data' => $response,
-                'request_id' => $response['Response']['RequestId'] ?? null,
+                'success' => $status->getCode() === 'Ok',
+                'message' => $status->getMessage() ?: '发送成功',
+                'data' => $response->toArray(),
+                'request_id' => $response->getRequestId(),
             ];
 
         } catch (Exception $e) {
@@ -146,39 +145,38 @@ class SmsService
         try {
             $this->validateConfig();
 
-            $timestamp = time();
-            $params = [
-                'SmsSdkAppId' => $this->config['sdk_app_id'],
-                'SignName' => $this->config['sign_name'],
-                'TemplateId' => $templateId,
-                'PhoneNumberSet' => $phones,
-                'TemplateParamSet' => array_values($templateParams),
-            ];
+            $cred = new \TencentCloud\Common\Credential(
+                $this->config['secret_id'],
+                $this->config['secret_key']
+            );
 
-            $commonParams = [
-                'Action' => 'SendSms',
-                'Version' => '2021-01-11',
-                'Region' => $this->config['region_id'],
-                'Timestamp' => $timestamp,
-                'Nonce' => rand(10000, 99999),
-                'SecretId' => $this->config['secret_id'],
-            ];
+            $httpProfile = new \TencentCloud\Common\Profile\HttpProfile();
+            $httpProfile->setEndpoint('sms.tencentcloudapi.com');
 
-            $allParams = array_merge($commonParams, $params);
-            $signature = $this->generateSignature($allParams);
-            $allParams['Signature'] = $signature;
+            $clientProfile = new \TencentCloud\Common\Profile\ClientProfile();
+            $clientProfile->setHttpProfile($httpProfile);
 
-            $response = Http::timeout($this->config['timeout'])
-                ->post('https://sms.tencentcloudapi.com/', $allParams)
-                ->json();
+            $client = new \TencentCloud\Sms\V20210111\SmsClient(
+                $cred,
+                $this->config['region_id'],
+                $clientProfile
+            );
 
-            $response = $response ?: [];
+            $req = new \TencentCloud\Sms\V20210111\Models\SendSmsRequest();
+            $req->setSmsSdkAppId($this->config['sdk_app_id']);
+            $req->setSignName($this->config['sign_name']);
+            $req->setTemplateId($templateId);
+            $req->setPhoneNumberSet($phones);
+            $req->setTemplateParamSet(array_values($templateParams));
+
+            $response = $client->SendSms($req);
+            $sendStatusSet = $response->getSendStatusSet();
 
             return [
-                'success' => isset($response['Response']['SendStatusSet']),
+                'success' => !empty($sendStatusSet),
                 'message' => '批量发送完成',
-                'data' => $response,
-                'request_id' => $response['Response']['RequestId'] ?? null,
+                'data' => $response->toArray(),
+                'request_id' => $response->getRequestId(),
             ];
 
         } catch (Exception $e) {

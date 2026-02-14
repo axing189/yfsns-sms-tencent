@@ -35,7 +35,6 @@ class SmsTencentServiceProvider extends ServiceProvider
         });
 
         $this->app->alias(SmsService::class, 'sms.tencent.service');
-        $this->app->alias(SmsService::class, 'Yfsns\LaravelSmsTencent\Services\SmsService');
     }
 
     /**
@@ -48,7 +47,7 @@ class SmsTencentServiceProvider extends ServiceProvider
             'sms'
         );
 
-        $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
 
         $this->registerPublishing();
     }
