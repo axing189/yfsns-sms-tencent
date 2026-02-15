@@ -40,7 +40,7 @@ class TencentChannel implements SmsChannelInterface
     public function send(string $phone, string $templateCode, array $templateData = []): array
     {
         try {
-            $this->validateConfig();
+            $this->validateCurrentConfig();
 
             $cred = new \TencentCloud\Common\Credential(
                 $this->config['secret_id'],
@@ -219,7 +219,7 @@ class TencentChannel implements SmsChannelInterface
         return ['CN', 'HK', 'US', 'SG', 'JP', 'KR'];
     }
 
-    protected function validateConfig(): void
+    protected function validateCurrentConfig(): void
     {
         $result = $this->validateConfig([]);
         if (!$result['valid']) {
