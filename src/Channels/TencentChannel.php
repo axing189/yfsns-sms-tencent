@@ -64,7 +64,7 @@ class TencentChannel implements SmsChannelInterface
             $req->setSignName($this->config['sign_name']);
             $req->setTemplateId($templateCode);
             $req->setPhoneNumberSet([$phone]);
-            $req->setTemplateParamSet(array_values($templateData));
+            $req->setTemplateParamSet(array_map('strval', array_values($templateData)));
 
             $response = $client->SendSms($req);
             $sendStatusSet = $response->getSendStatusSet();
